@@ -144,7 +144,6 @@ export class CapacitorAppleMusicWeb
   }): Promise<{
     result: boolean;
     librarySongId?: string;
-    songTitle?: string;
     albumTitle?: string;
   }> {
     const replaceName = (name: string) => {
@@ -462,7 +461,6 @@ interface CapacitorAppleMusicPlugin {
   }): Promise<{
     result: boolean;
     librarySongId?: string;
-    songTitle?: string;
     albumTitle?: string;
   }>;
   play(): Promise<{ result: boolean }>;

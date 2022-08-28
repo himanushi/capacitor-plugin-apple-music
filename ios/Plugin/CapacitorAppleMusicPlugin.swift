@@ -6,6 +6,8 @@ import MusicKit
 /// Please read the Capacitor iOS Plugin Development Guide
 /// here: https://capacitorjs.com/docs/plugins/ios
 let resultKey = "result"
+let librarySongIdKey = "librarySongId"
+let albumTitleKey = "albumTitle"
 
 @available(iOS 15.0, *)
 @objc(CapacitorAppleMusicPlugin)
@@ -119,7 +121,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                 let subscription = try await MusicSubscription.current
                 result = subscription.canPlayCatalogContent
             } catch {
-                
+
             }
             call.resolve([resultKey: result])
         }
@@ -286,65 +288,99 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
     var playable = false
     @objc func setSong(_ call: CAPPluginCall) {
         let songId = call.getString("songId") ?? ""
+        let librarySongId = call.getString("librarySongId")
         let previewUrl = call.getString("previewUrl") ?? ""
         let songTitle = call.getString("songTitle")
+        let albumTitle = call.getString("albumTitle")
         Task {
             var result = false
+            var resultLibrarySongId: String? = nil
+            var resultAlbumTitle: String? = nil
 
             do {
 
                 let subscription = try await MusicSubscription.current
-                if MusicAuthorization.currentStatus == .authorized && subscription.canPlayCatalogContent {
+                if MusicAuthorization.currentStatus == .authorized
+                    && subscription.canPlayCatalogContent
+                {
 
                     await reset()
 
-                    let request = MusicCatalogResourceRequest<MusicKit.Song>(
-                        matching: \.id, equalTo: MusicItemID(songId))
-                    let response = try await request.response()
-
-                    if let track = response.items.first {
-
-                        playable = track.playParameters != nil
-
-                        if playable {
-                            print("🎵 ------ Apple Music ---------")
-                            // Apple Music
-                            ApplicationMusicPlayer.shared.queue = [track]
+                    // 前回検索済みの場合
+                    print([librarySongId, songTitle, albumTitle])
+                    if librarySongId != nil && songTitle != nil && albumTitle != nil {
+                        let query = MPMediaQuery.songs()
+                        let trackTitleFilter = MPMediaPropertyPredicate(
+                            value: songTitle,
+                            forProperty: MPMediaItemPropertyTitle,
+                            comparisonType: .equalTo)
+                        let albumTitleFilter = MPMediaPropertyPredicate(
+                            value: albumTitle,
+                            forProperty: MPMediaItemPropertyAlbumTitle,
+                            comparisonType: .equalTo)
+                        let filterPredicates: Set<MPMediaPredicate> = [
+                            trackTitleFilter, albumTitleFilter,
+                        ]
+                        query.filterPredicates = filterPredicates
+                        if (query.items?.count ?? 0) > 0 {
+                            print("🎵 ------ iTunes Cache ---------")
+                            player.setQueue(with: query)
                             result = true
-                        } else {
-                            let songs = await getLibrarySongs(songTitle ?? track.title)
-                            if let purchasedTrack = songs.filter({
-                                song in
-                                return song.attributes?.playParams?.purchasedID == songId
-                            }).first {
-                                let query = MPMediaQuery.songs()
-                                let trackTitleFilter = MPMediaPropertyPredicate(
-                                    value: purchasedTrack.attributes?.name,
-                                    forProperty: MPMediaItemPropertyTitle,
-                                    comparisonType: .equalTo)
-                                let albumTitleFilter = MPMediaPropertyPredicate(
-                                    value: purchasedTrack.attributes?.albumName,
-                                    forProperty: MPMediaItemPropertyAlbumTitle,
-                                    comparisonType: .equalTo)
-                                let filterPredicates: Set<MPMediaPredicate> = [
-                                    trackTitleFilter, albumTitleFilter,
-                                ]
-                                query.filterPredicates = filterPredicates
-                                if (query.items?.count ?? 0) > 0 {
-                                    print("🎵 ------ iTunes ---------")
-                                    player.setQueue(with: query)
-                                    result = true
+                            resultLibrarySongId = librarySongId
+                            resultAlbumTitle = albumTitle
+                        }
+                    } else {
+                        let request = MusicCatalogResourceRequest<MusicKit.Song>(
+                            matching: \.id, equalTo: MusicItemID(songId))
+                        let response = try await request.response()
+
+                        if let track = response.items.first {
+
+                            playable = track.playParameters != nil
+
+                            if playable {
+                                print("🎵 ------ Apple Music ---------")
+                                // Apple Music
+                                ApplicationMusicPlayer.shared.queue = [track]
+                                result = true
+                            } else {
+                                let songs = await getLibrarySongs(songTitle ?? track.title)
+                                if let purchasedTrack = songs.filter({
+                                    song in
+                                    return song.attributes?.playParams?.purchasedID == songId
+                                }).first {
+                                    let query = MPMediaQuery.songs()
+                                    let trackTitleFilter = MPMediaPropertyPredicate(
+                                        value: purchasedTrack.attributes?.name,
+                                        forProperty: MPMediaItemPropertyTitle,
+                                        comparisonType: .equalTo)
+                                    let albumTitleFilter = MPMediaPropertyPredicate(
+                                        value: purchasedTrack.attributes?.albumName,
+                                        forProperty: MPMediaItemPropertyAlbumTitle,
+                                        comparisonType: .equalTo)
+                                    let filterPredicates: Set<MPMediaPredicate> = [
+                                        trackTitleFilter, albumTitleFilter,
+                                    ]
+                                    query.filterPredicates = filterPredicates
+                                    if (query.items?.count ?? 0) > 0 {
+                                        print("🎵 ------ iTunes ---------")
+                                        player.setQueue(with: query)
+                                        result = true
+                                        resultLibrarySongId = purchasedTrack.id
+                                        resultAlbumTitle = purchasedTrack.attributes?.albumName
+                                    } else if let trackPreviewUrl = track.previewAssets?.first?.url
+                                    {
+                                        // 購入したけどまだ反映されていない場合。大体数時間~数日反映に時間がかかる。
+                                        print("🎵 ------ preview ---------", trackPreviewUrl)
+                                        setPlayer(trackPreviewUrl)
+                                        result = true
+                                    }
                                 } else if let trackPreviewUrl = track.previewAssets?.first?.url {
-                                    // 購入したけどまだ反映されていない場合。大体数時間~数日反映に時間がかかる。
                                     print("🎵 ------ preview ---------", trackPreviewUrl)
+                                    // Play the preview
                                     setPlayer(trackPreviewUrl)
                                     result = true
                                 }
-                            } else if let trackPreviewUrl = track.previewAssets?.first?.url {
-                                print("🎵 ------ preview ---------", trackPreviewUrl)
-                                // Play the preview
-                                setPlayer(trackPreviewUrl)
-                                result = true
                             }
                         }
                     }
@@ -381,6 +417,8 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                             print("🎵 ------ iTunes ---------")
                             player.setQueue(with: query)
                             result = true
+                            resultLibrarySongId = purchasedTrack.id
+                            resultAlbumTitle = purchasedTrack.attributes?.albumName
                         } else if let previewUrl2 = URL(string: previewUrl) {
                             // 購入したけどまだ反映されていない場合。大体数時間~数日反映に時間がかかる。
                             print("🎵 ------ preview ---------", previewUrl)
@@ -391,9 +429,12 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                 }
             }
 
-            call.resolve([resultKey: result])
+            call.resolve([
+                resultKey: result,
+                librarySongIdKey: resultLibrarySongId as Any,
+                albumTitleKey: resultAlbumTitle as Any,
+            ])
         }
-
     }
 
     private func setPlayer(_ previewUrl: URL) {
