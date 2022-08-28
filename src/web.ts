@@ -140,7 +140,13 @@ export class CapacitorAppleMusicWeb
     librarySongId?: string;
     previewUrl?: string;
     songTitle?: string;
-  }): Promise<{ result: boolean; librarySongId: string | null }> {
+    albumTitle?: string;
+  }): Promise<{
+    result: boolean;
+    librarySongId?: string;
+    songTitle?: string;
+    albumTitle?: string;
+  }> {
     const replaceName = (name: string) => {
       // 名前が長すぎる場合は検索で引っかからないのでなるべく短い名前にする
       return name.replace(/(?!^)(\[|\(|-|:|〜|~|,).*/g, '');
@@ -190,14 +196,15 @@ export class CapacitorAppleMusicWeb
           this.resetPreviewPlayer();
           console.log('🎵 ------ unAuth preview ---------', options.previewUrl);
           this.setPlayer(options.previewUrl);
-          return { result: true, librarySongId: null };
+          return { result: true };
         } else {
-          return { result: false, librarySongId: null };
+          return { result: false };
         }
       }
 
       // ライブラリIDが存在する場合はライブラリの曲を再生
       if (options.librarySongId) {
+        console.log('🎵 ------ iTunes Cache ---------');
         await MusicKit.getInstance().setQueue({
           songs: [options.librarySongId],
         });
@@ -210,11 +217,10 @@ export class CapacitorAppleMusicWeb
 
       await this.reset();
 
-      if (!('data' in catalogResult.data))
-        return { result: false, librarySongId: null };
+      if (!('data' in catalogResult.data)) return { result: false };
 
       const track = catalogResult.data.data[0];
-      if (!track) return { result: false, librarySongId: null };
+      if (!track) return { result: false };
 
       const playable = Boolean(track.attributes.playParams);
       if (playable) {
@@ -242,7 +248,7 @@ export class CapacitorAppleMusicWeb
         console.log(error);
 
         if (!options.songTitle) {
-          return { result: false, librarySongId: null };
+          return { result: false };
         }
 
         const purchasedTrack = await getLibrarySong(
@@ -261,10 +267,10 @@ export class CapacitorAppleMusicWeb
         }
       } catch (error) {
         console.log(error);
-        return { result: false, librarySongId: null };
+        return { result: false };
       }
     }
-    return { result: true, librarySongId: null };
+    return { result: true };
   }
 
   setPlayer(previewUrl: string): void {
@@ -452,7 +458,13 @@ interface CapacitorAppleMusicPlugin {
     librarySongId?: string;
     previewUrl?: string;
     songTitle?: string;
-  }): Promise<{ result: boolean; librarySongId: string | null }>;
+    albumTitle?: string;
+  }): Promise<{
+    result: boolean;
+    librarySongId?: string;
+    songTitle?: string;
+    albumTitle?: string;
+  }>;
   play(): Promise<{ result: boolean }>;
   stop(): Promise<{ result: boolean }>;
   pause(): Promise<{ result: boolean }>;
