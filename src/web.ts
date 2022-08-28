@@ -235,7 +235,11 @@ export class CapacitorAppleMusicWeb
         if (purchasedTrack) {
           console.log('🎵 ------ iTunes ---------');
           await MusicKit.getInstance().setQueue({ songs: [purchasedTrack.id] });
-          return { result: true, librarySongId: purchasedTrack.id };
+          return {
+            result: true,
+            librarySongId: purchasedTrack.id,
+            albumTitle: purchasedTrack.attributes.albumName,
+          };
         } else if (previewUrl) {
           console.log('🎵 ------ preview ---------', previewUrl);
           this.setPlayer(previewUrl);
@@ -259,7 +263,11 @@ export class CapacitorAppleMusicWeb
         if (purchasedTrack) {
           console.log('🎵 ------ iTunes ---------');
           await MusicKit.getInstance().setQueue({ songs: [purchasedTrack.id] });
-          return { result: true, librarySongId: purchasedTrack.id };
+          return {
+            result: true,
+            librarySongId: purchasedTrack.id,
+            albumTitle: purchasedTrack.attributes.albumName,
+          };
         } else if (previewUrl) {
           console.log('🎵 ------ preview ---------', previewUrl);
           this.setPlayer(previewUrl);
@@ -557,6 +565,7 @@ declare namespace MusicKit {
     type: string;
     href: string;
     attributes: {
+      albumName: string;
       name: string;
       playParams: {
         purchasedId?: string;
