@@ -113,14 +113,14 @@ unauthorize() => Promise<{ result: boolean; }>
 ### setSong(...)
 
 ```typescript
-setSong(options: { songId: string; librarySongId?: string; previewUrl?: string; songTitle?: string; albumTitle?: string; }) => Promise<{ result: boolean; librarySongId?: string; songTitle?: string; albumTitle?: string; }>
+setSong(options: { songId: string; librarySongId?: string; previewUrl?: string; songTitle?: string; albumTitle?: string; }) => Promise<{ result: boolean; librarySongId?: string; albumTitle?: string; }>
 ```
 
 | Param         | Type                                                                                                                   |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | **`options`** | <code>{ songId: string; librarySongId?: string; previewUrl?: string; songTitle?: string; albumTitle?: string; }</code> |
 
-**Returns:** <code>Promise&lt;{ result: boolean; librarySongId?: string; songTitle?: string; albumTitle?: string; }&gt;</code>
+**Returns:** <code>Promise&lt;{ result: boolean; librarySongId?: string; albumTitle?: string; }&gt;</code>
 
 --------------------
 
