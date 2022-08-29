@@ -310,27 +310,22 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                     await reset()
 
                     // 前回検索済みの場合
-                    if librarySongId != nil && songTitle != nil && albumTitle != nil {
+                    if let libraryId = librarySongId {
                         reason = reason + ",Cacheあり"
                         let query = MPMediaQuery.songs()
                         let trackTitleFilter = MPMediaPropertyPredicate(
-                            value: songTitle,
-                            forProperty: MPMediaItemPropertyTitle,
+                            value: libraryId,
+                            forProperty: MPMediaItemPropertyPersistentID,
                             comparisonType: .equalTo)
-                        let albumTitleFilter = MPMediaPropertyPredicate(
-                            value: albumTitle,
-                            forProperty: MPMediaItemPropertyAlbumTitle,
-                            comparisonType: .equalTo)
-                        let filterPredicates: Set<MPMediaPredicate> = [
-                            trackTitleFilter, albumTitleFilter,
-                        ]
-                        query.filterPredicates = filterPredicates
-                        if (query.items?.count ?? 0) > 0 {
+                        query.filterPredicates = Set<MPMediaPredicate>([
+                            trackTitleFilter
+                        ])
+                        if let track = query.items?.first {
                             reason = reason + ",曲あり"
                             print("🎵 ------ iTunes Cache ---------")
                             player.setQueue(with: query)
                             result = true
-                            resultLibrarySongId = librarySongId
+                            resultLibrarySongId = String(track.persistentID)
                             resultAlbumTitle = albumTitle
                         } else {
                             reason = reason + ",曲なし"
@@ -373,12 +368,12 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                                         trackTitleFilter, albumTitleFilter,
                                     ]
                                     query.filterPredicates = filterPredicates
-                                    if (query.items?.count ?? 0) > 0 {
+                                    if let track = query.items?.first {
                                         reason = reason + ",曲あり"
                                         print("🎵 ------ iTunes ---------")
                                         player.setQueue(with: query)
                                         result = true
-                                        resultLibrarySongId = purchasedTrack.id
+                                        resultLibrarySongId = String(track.persistentID)
                                         resultAlbumTitle = purchasedTrack.attributes?.albumName
                                     } else if let trackPreviewUrl = track.previewAssets?.first?.url
                                     {
@@ -436,12 +431,12 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                             trackTitleFilter, albumTitleFilter,
                         ]
                         query.filterPredicates = filterPredicates
-                        if (query.items?.count ?? 0) > 0 {
+                        if let track = query.items?.first {
                             reason = reason + ",曲あり"
                             print("🎵 ------ iTunes ---------")
                             player.setQueue(with: query)
                             result = true
-                            resultLibrarySongId = purchasedTrack.id
+                            resultLibrarySongId = String(track.persistentID)
                             resultAlbumTitle = purchasedTrack.attributes?.albumName
                         } else if let previewUrl2 = URL(string: previewUrl) {
                             reason = reason + ",曲なしプレビューあり"
