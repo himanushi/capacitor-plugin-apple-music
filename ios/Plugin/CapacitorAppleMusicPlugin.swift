@@ -8,6 +8,7 @@ import MusicKit
 let resultKey = "result"
 let librarySongIdKey = "librarySongId"
 let albumTitleKey = "albumTitle"
+let reasonKey = "reason"
 
 @available(iOS 15.0, *)
 @objc(CapacitorAppleMusicPlugin)
@@ -294,6 +295,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
         let albumTitle = call.getString("albumTitle")
         Task {
             var result = false
+            var reason = "開始"
             var resultLibrarySongId: String? = nil
             var resultAlbumTitle: String? = nil
 
@@ -304,11 +306,12 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                     && subscription.canPlayCatalogContent
                 {
 
+                    reason = reason + ",ログイン済み"
                     await reset()
 
                     // 前回検索済みの場合
-                    print([librarySongId, songTitle, albumTitle])
                     if librarySongId != nil && songTitle != nil && albumTitle != nil {
+                        reason = reason + ",Cacheあり"
                         let query = MPMediaQuery.songs()
                         let trackTitleFilter = MPMediaPropertyPredicate(
                             value: songTitle,
@@ -323,32 +326,40 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                         ]
                         query.filterPredicates = filterPredicates
                         if (query.items?.count ?? 0) > 0 {
+                            reason = reason + ",曲あり"
                             print("🎵 ------ iTunes Cache ---------")
                             player.setQueue(with: query)
                             result = true
                             resultLibrarySongId = librarySongId
                             resultAlbumTitle = albumTitle
+                        } else {
+                            reason = reason + ",曲なし"
                         }
                     } else {
+                        reason = reason + ",Cacheなし"
                         let request = MusicCatalogResourceRequest<MusicKit.Song>(
                             matching: \.id, equalTo: MusicItemID(songId))
                         let response = try await request.response()
 
                         if let track = response.items.first {
+                            reason = reason + ",曲あり"
 
                             playable = track.playParameters != nil
 
                             if playable {
-                                print("🎵 ------ Apple Music ---------")
+                                reason = reason + ",再生可能"
+                                print("🎵 ------ Apple Music 変わってる ---------")
                                 // Apple Music
                                 ApplicationMusicPlayer.shared.queue = [track]
                                 result = true
                             } else {
+                                reason = reason + ",再生不可"
                                 let songs = await getLibrarySongs(songTitle ?? track.title)
                                 if let purchasedTrack = songs.filter({
                                     song in
                                     return song.attributes?.playParams?.purchasedID == songId
                                 }).first {
+                                    reason = reason + ",iTunesあり"
                                     let query = MPMediaQuery.songs()
                                     let trackTitleFilter = MPMediaPropertyPredicate(
                                         value: purchasedTrack.attributes?.name,
@@ -363,6 +374,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                                     ]
                                     query.filterPredicates = filterPredicates
                                     if (query.items?.count ?? 0) > 0 {
+                                        reason = reason + ",曲あり"
                                         print("🎵 ------ iTunes ---------")
                                         player.setQueue(with: query)
                                         result = true
@@ -370,28 +382,38 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                                         resultAlbumTitle = purchasedTrack.attributes?.albumName
                                     } else if let trackPreviewUrl = track.previewAssets?.first?.url
                                     {
+                                        reason = reason + ",曲なしプレビュー"
                                         // 購入したけどまだ反映されていない場合。大体数時間~数日反映に時間がかかる。
                                         print("🎵 ------ preview ---------", trackPreviewUrl)
                                         setPlayer(trackPreviewUrl)
                                         result = true
+                                    } else {
+                                        reason = reason + ",曲なし"
                                     }
                                 } else if let trackPreviewUrl = track.previewAssets?.first?.url {
+                                    reason = reason + ",iTunesなし"
                                     print("🎵 ------ preview ---------", trackPreviewUrl)
                                     // Play the preview
                                     setPlayer(trackPreviewUrl)
                                     result = true
+                                } else {
+                                    reason = reason + ",iTunesなしプレビューもなし"
                                 }
                             }
                         }
                     }
                 } else if let trackPreviewUrl = URL(string: previewUrl) {
+                    reason = reason + ",未ログインプレビューあり"
                     await resetPreviewPlayer()
                     print("🎵 ------ unAuth preview ---------", trackPreviewUrl)
                     // Play the preview
                     setPlayer(trackPreviewUrl)
                     result = true
+                } else {
+                    reason = reason + ",未ログインプレビューなし"
                 }
             } catch {
+                reason = reason + ",エラーあり"
                 print(error)
 
                 // Apple ID が 404 である場合
@@ -400,6 +422,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                     if let purchasedTrack = songs.filter({ song in
                         return song.attributes?.playParams?.purchasedID == songId
                     }).first {
+                        reason = reason + ",タイトルあり"
                         let query = MPMediaQuery.songs()
                         let trackTitleFilter = MPMediaPropertyPredicate(
                             value: purchasedTrack.attributes?.name,
@@ -414,23 +437,30 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                         ]
                         query.filterPredicates = filterPredicates
                         if (query.items?.count ?? 0) > 0 {
+                            reason = reason + ",曲あり"
                             print("🎵 ------ iTunes ---------")
                             player.setQueue(with: query)
                             result = true
                             resultLibrarySongId = purchasedTrack.id
                             resultAlbumTitle = purchasedTrack.attributes?.albumName
                         } else if let previewUrl2 = URL(string: previewUrl) {
+                            reason = reason + ",曲なしプレビューあり"
                             // 購入したけどまだ反映されていない場合。大体数時間~数日反映に時間がかかる。
                             print("🎵 ------ preview ---------", previewUrl)
                             setPlayer(previewUrl2)
                             result = true
+                        } else {
+                            reason = reason + ",曲なしプレビューなし"
                         }
                     }
+                } else {
+                    reason = reason + ",タイトルなし"
                 }
             }
 
             call.resolve([
                 resultKey: result,
+                reasonKey: reason,
                 librarySongIdKey: resultLibrarySongId as Any,
                 albumTitleKey: resultAlbumTitle as Any,
             ])
