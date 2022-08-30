@@ -301,17 +301,19 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
 
             do {
 
+                await reset()
+
                 let subscription = try await MusicSubscription.current
                 if MusicAuthorization.currentStatus == .authorized
                     && subscription.canPlayCatalogContent
                 {
 
                     reason = reason + ",ログイン済み"
-                    await reset()
 
                     // 前回検索済みの場合
                     if let libraryId = librarySongId {
                         reason = reason + ",Cacheあり"
+                        playable = false
                         let query = MPMediaQuery.songs()
                         let trackTitleFilter = MPMediaPropertyPredicate(
                             value: libraryId,
@@ -343,7 +345,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
 
                             if playable {
                                 reason = reason + ",再生可能"
-                                print("🎵 ------ Apple Music 変わってる ---------")
+                                print("🎵 ------ Apple Music ---------")
                                 // Apple Music
                                 ApplicationMusicPlayer.shared.queue = [track]
                                 result = true
@@ -418,6 +420,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                         return song.attributes?.playParams?.purchasedID == songId
                     }).first {
                         reason = reason + ",タイトルあり"
+                        playable = false
                         let query = MPMediaQuery.songs()
                         let trackTitleFilter = MPMediaPropertyPredicate(
                             value: purchasedTrack.attributes?.name,
