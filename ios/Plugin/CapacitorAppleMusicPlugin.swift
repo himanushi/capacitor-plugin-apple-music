@@ -490,6 +490,12 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
         await resetPreviewPlayer()
     }
 
+    @objc func getLibraryAlbum(_ call: CAPPluginCall) {
+        call.resolve([
+            "result": true
+        ])
+    }
+
     public override func observeValue(
         forKeyPath keyPath: String?,
         of object: Any?,
