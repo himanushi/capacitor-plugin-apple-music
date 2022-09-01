@@ -20,6 +20,7 @@ npx cap sync
 * [`authorize()`](#authorize)
 * [`unauthorize()`](#unauthorize)
 * [`setSong(...)`](#setsong)
+* [`getLibraryAlbum(...)`](#getlibraryalbum)
 * [`play()`](#play)
 * [`stop()`](#stop)
 * [`pause()`](#pause)
@@ -121,6 +122,21 @@ setSong(options: { songId: string; librarySongId?: string; previewUrl?: string; 
 | **`options`** | <code>{ songId: string; librarySongId?: string; previewUrl?: string; songTitle?: string; albumTitle?: string; }</code> |
 
 **Returns:** <code>Promise&lt;{ result: boolean; librarySongId?: string; albumTitle?: string; }&gt;</code>
+
+--------------------
+
+
+### getLibraryAlbum(...)
+
+```typescript
+getLibraryAlbum(options: { albumTitle: string; }) => Promise<{ result: boolean; album?: { attributes: { title: string; id: string; }; tracks: { title: string; id: string; appleMusicId: string; }[]; }; }>
+```
+
+| Param         | Type                                 |
+| ------------- | ------------------------------------ |
+| **`options`** | <code>{ albumTitle: string; }</code> |
+
+**Returns:** <code>Promise&lt;{ result: boolean; album?: { attributes: { title: string; id: string; }; tracks: { title: string; id: string; appleMusicId: string; }[]; }; }&gt;</code>
 
 --------------------
 
