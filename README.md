@@ -129,14 +129,14 @@ setSong(options: { songId: string; librarySongId?: string; previewUrl?: string; 
 ### getLibraryAlbum(...)
 
 ```typescript
-getLibraryAlbum(options: { albumTitle: string; }) => Promise<{ result: boolean; album?: { attributes: { title: string; id: string; }; tracks: { title: string; id: string; appleMusicId: string; }[]; }; }>
+getLibraryAlbum(options: { albumTitle: string; }) => Promise<{ result: boolean; album?: { attributes: { title: string; id: string; }; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }>
 ```
 
 | Param         | Type                                 |
 | ------------- | ------------------------------------ |
 | **`options`** | <code>{ albumTitle: string; }</code> |
 
-**Returns:** <code>Promise&lt;{ result: boolean; album?: { attributes: { title: string; id: string; }; tracks: { title: string; id: string; appleMusicId: string; }[]; }; }&gt;</code>
+**Returns:** <code>Promise&lt;{ result: boolean; album?: { attributes: { title: string; id: string; }; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }&gt;</code>
 
 --------------------
 

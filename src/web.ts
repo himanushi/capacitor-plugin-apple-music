@@ -437,7 +437,8 @@ export class CapacitorAppleMusicWeb
       tracks: {
         title: string;
         id: string;
-        appleMusicId: string;
+        discNumber: string;
+        trackNumber: string;
       }[];
     };
   }> {
@@ -448,7 +449,8 @@ export class CapacitorAppleMusicWeb
           tracks: {
             title: string;
             id: string;
-            appleMusicId: string;
+            discNumber: string;
+            trackNumber: string;
           }[];
         }
       | undefined = undefined;
@@ -507,7 +509,8 @@ export class CapacitorAppleMusicWeb
       const tracks: {
         title: string;
         id: string;
-        appleMusicId: string;
+        discNumber: string;
+        trackNumber: string;
       }[] = [];
       count = 0;
 
@@ -526,7 +529,8 @@ export class CapacitorAppleMusicWeb
               tracks.push({
                 title: track.attributes.name,
                 id: track.id,
-                appleMusicId: track.attributes.playParams.purchasedId,
+                discNumber: track.attributes.discNumber.toString(),
+                trackNumber: track.attributes.trackNumber.toString(),
               });
             }
           }
@@ -596,7 +600,8 @@ interface CapacitorAppleMusicPlugin {
       tracks: {
         title: string;
         id: string;
-        appleMusicId: string;
+        discNumber: string;
+        trackNumber: string;
       }[];
     };
   }>;
@@ -750,6 +755,8 @@ declare namespace MusicKit {
     type: string;
     href: string;
     attributes: {
+      discNumber: number;
+      trackNumber: number;
       name: string;
       durationInMillis: number;
       artwork?: { url: string };
