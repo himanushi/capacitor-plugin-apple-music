@@ -491,9 +491,58 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
     }
 
     @objc func getLibraryAlbum(_ call: CAPPluginCall) {
-        call.resolve([
-            "result": true
-        ])
+        let albumTitle = call.getString("albumTitle") ?? ""
+
+        Task {
+            var result = false
+            var reason = "開始"
+            var resultAlbumId: String? = nil
+            var resultTracks: [[String: String?]] = []
+
+            do {
+                let subscription = try await MusicSubscription.current
+                if MusicAuthorization.currentStatus == .authorized
+                    && subscription.canPlayCatalogContent
+                {
+                    reason = reason + ",ログイン済み"
+
+                    let query = MPMediaQuery.songs()
+                    let albumTitleFilter = MPMediaPropertyPredicate(
+                        value: albumTitle,
+                        forProperty: MPMediaItemPropertyAlbumTitle,
+                        comparisonType: .equalTo)
+                    let filterPredicates: Set<MPMediaPredicate> = [
+                        albumTitleFilter
+                    ]
+                    query.filterPredicates = filterPredicates
+                    if let tracks = query.items {
+                        reason = reason + ",アルバムあり"
+                        tracks.forEach {
+                            resultAlbumId = String($0.albumPersistentID)
+                            resultTracks.append([
+                                "title": $0.title,
+                                "id": String($0.persistentID),
+                                "discNumber": String($0.discNumber),
+                                "trackNumber": String($0.trackNumber),
+                            ])
+                        }
+                        result = true
+                    } else {
+                        reason = reason + ",アルバムなし"
+                    }
+                } else {
+                    reason = reason + ",未ログイン"
+                }
+            } catch {
+                reason = reason + ",エラーあり"
+            }
+
+            call.resolve([
+                resultKey: result,
+                reasonKey: reason,
+                "album": ["title": albumTitle, "id": resultAlbumId as Any, "tracks": resultTracks],
+            ])
+        }
     }
 
     public override func observeValue(
