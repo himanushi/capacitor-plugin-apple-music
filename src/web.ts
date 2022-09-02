@@ -190,6 +190,8 @@ export class CapacitorAppleMusicWeb
     };
 
     try {
+      await this.reset();
+
       // ライブラリ参照権限がない場合はプレビュー再生
       // または
       // 強制的にプレビュー再生
@@ -226,8 +228,6 @@ export class CapacitorAppleMusicWeb
       const catalogResult = await MusicKit.getInstance().api.music(
         `v1/catalog/jp/songs/${options.songId}`,
       );
-
-      await this.reset();
 
       if (!('data' in catalogResult.data)) return { result: false };
 
