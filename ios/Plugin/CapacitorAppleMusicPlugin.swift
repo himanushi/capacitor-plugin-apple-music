@@ -293,6 +293,8 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
         let previewUrl = call.getString("previewUrl") ?? ""
         let songTitle = call.getString("songTitle")
         let albumTitle = call.getString("albumTitle")
+        let forcePreview = call.getBool("forcePreview") ?? false
+
         Task {
             var result = false
             var reason = "開始"
@@ -304,7 +306,18 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                 await reset()
 
                 let subscription = try await MusicSubscription.current
-                if MusicAuthorization.currentStatus == .authorized
+                if forcePreview {
+                    if let trackPreviewUrl = URL(string: previewUrl) {
+                        reason = reason + ",強制プレビューあり"
+                        await resetPreviewPlayer()
+                        print("🎵 ------ force preview ---------", trackPreviewUrl)
+                        // Play the preview
+                        setPlayer(trackPreviewUrl)
+                        result = true
+                    } else {
+                        reason = reason + ",強制プレビューなし"
+                    }
+                } else if MusicAuthorization.currentStatus == .authorized
                     && subscription.canPlayCatalogContent
                 {
 
@@ -523,7 +536,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                                 "title": $0.title,
                                 "id": String($0.persistentID),
                                 "discNumber": String($0.discNumber),
-                                "trackNumber": String($0.trackNumber),
+                                "trackNumber": String($0.albumTrackNumber),
                             ])
                         }
                         result = true
