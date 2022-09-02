@@ -141,6 +141,7 @@ export class CapacitorAppleMusicWeb
     previewUrl?: string;
     songTitle?: string;
     albumTitle?: string;
+    forcePreview?: boolean;
   }): Promise<{
     result: boolean;
     librarySongId?: string;
@@ -190,10 +191,22 @@ export class CapacitorAppleMusicWeb
 
     try {
       // ライブラリ参照権限がない場合はプレビュー再生
-      if (!(await this.isAuthorized()).result) {
+      // または
+      // 強制的にプレビュー再生
+      if (!(await this.isAuthorized()).result || options.forcePreview) {
         if (options.previewUrl) {
           this.resetPreviewPlayer();
-          console.log('🎵 ------ unAuth preview ---------', options.previewUrl);
+          if (options.forcePreview) {
+            console.log(
+              '🎵 ------ force preview ---------',
+              options.previewUrl,
+            );
+          } else {
+            console.log(
+              '🎵 ------ unAuth preview ---------',
+              options.previewUrl,
+            );
+          }
           this.setPlayer(options.previewUrl);
           return { result: true };
         } else {
@@ -586,6 +599,7 @@ interface CapacitorAppleMusicPlugin {
     previewUrl?: string;
     songTitle?: string;
     albumTitle?: string;
+    forcePreview?: boolean;
   }): Promise<{
     result: boolean;
     librarySongId?: string;
