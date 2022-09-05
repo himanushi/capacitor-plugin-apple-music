@@ -503,6 +503,35 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
         await resetPreviewPlayer()
     }
 
+    @objc func getLibraryAlbums(_ call: CAPPluginCall) {
+        call.resolve([
+            resultKey: true,
+            "hasNext": false,
+            "albums": [],
+        ])
+        //        let query = MPMediaQuery.albums()
+        //        if let albums = query.items {
+        //            print(albums.count)
+        //            albums[0..<5].forEach {
+        //                if let artwork = $0.artwork {
+        //                    let image = artwork.image(at: CGSize(width: 300, height: 300))
+        //                    if let imageData = image?.jpegData(compressionQuality: 1.0) {
+        //                        print(imageData.base64EncodedString())
+        //                    }
+        //                }
+        //            }
+        //            let query2 = MPMediaQuery.albums()
+        //            if let collections = query2.collections {
+        //                for collection in collections {
+        //                    if let representativeTitle = collection.representativeItem!.albumTitle {
+        //                        print("'\(representativeTitle)',")
+        //                    }
+        //                }
+        //            }
+        //
+        //        }
+    }
+
     @objc func getLibraryAlbum(_ call: CAPPluginCall) {
         let albumTitle = call.getString("albumTitle") ?? ""
 
@@ -512,42 +541,35 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
             var resultAlbumId: String? = nil
             var resultTracks: [[String: String?]] = []
 
-            do {
-                let subscription = try await MusicSubscription.current
-                if MusicAuthorization.currentStatus == .authorized
-                    && subscription.canPlayCatalogContent
-                {
-                    reason = reason + ",ログイン済み"
+            if MusicAuthorization.currentStatus == .authorized {
+                reason = reason + ",ログイン済み"
 
-                    let query = MPMediaQuery.songs()
-                    let albumTitleFilter = MPMediaPropertyPredicate(
-                        value: albumTitle,
-                        forProperty: MPMediaItemPropertyAlbumTitle,
-                        comparisonType: .equalTo)
-                    let filterPredicates: Set<MPMediaPredicate> = [
-                        albumTitleFilter
-                    ]
-                    query.filterPredicates = filterPredicates
-                    if let tracks = query.items {
-                        reason = reason + ",アルバムあり"
-                        tracks.forEach {
-                            resultAlbumId = String($0.albumPersistentID)
-                            resultTracks.append([
-                                "title": $0.title,
-                                "id": String($0.persistentID),
-                                "discNumber": String($0.discNumber),
-                                "trackNumber": String($0.albumTrackNumber),
-                            ])
-                        }
-                        result = true
-                    } else {
-                        reason = reason + ",アルバムなし"
+                let query = MPMediaQuery.songs()
+                let albumTitleFilter = MPMediaPropertyPredicate(
+                    value: albumTitle,
+                    forProperty: MPMediaItemPropertyAlbumTitle,
+                    comparisonType: .equalTo)
+                let filterPredicates: Set<MPMediaPredicate> = [
+                    albumTitleFilter
+                ]
+                query.filterPredicates = filterPredicates
+                if let tracks = query.items {
+                    reason = reason + ",アルバムあり"
+                    tracks.forEach {
+                        resultAlbumId = String($0.albumPersistentID)
+                        resultTracks.append([
+                            "title": $0.title,
+                            "id": String($0.persistentID),
+                            "discNumber": String($0.discNumber),
+                            "trackNumber": String($0.albumTrackNumber),
+                        ])
                     }
+                    result = true
                 } else {
-                    reason = reason + ",未ログイン"
+                    reason = reason + ",アルバムなし"
                 }
-            } catch {
-                reason = reason + ",エラーあり"
+            } else {
+                reason = reason + ",未ログイン"
             }
 
             call.resolve([

@@ -446,7 +446,8 @@ export class CapacitorAppleMusicWeb
   }): Promise<{
     result: boolean;
     album?: {
-      attributes: { title: string; id: string };
+      title: string;
+      id: string;
       tracks: {
         title: string;
         id: string;
@@ -458,7 +459,8 @@ export class CapacitorAppleMusicWeb
     let result = false;
     let album:
       | {
-          attributes: { title: string; id: string };
+          title: string;
+          id: string;
           tracks: {
             title: string;
             id: string;
@@ -499,10 +501,8 @@ export class CapacitorAppleMusicWeb
         );
         if (resultAlbum) {
           album = {
-            attributes: {
-              title: resultAlbum.attributes.name,
-              id: resultAlbum.id,
-            },
+            title: resultAlbum.attributes.name,
+            id: resultAlbum.id,
             tracks: [],
           };
           break;
@@ -518,7 +518,7 @@ export class CapacitorAppleMusicWeb
     if (album) {
       // 曲一覧
       hasNext = false;
-      fetchUrl = `/v1/me/library/albums/${album.attributes.id}/tracks?limit=100`;
+      fetchUrl = `/v1/me/library/albums/${album.id}/tracks?limit=100`;
       const tracks: {
         title: string;
         id: string;
@@ -559,6 +559,42 @@ export class CapacitorAppleMusicWeb
     }
 
     return { result, album };
+  }
+
+  async getLibraryAlbums(options: {
+    limit: number;
+    offset: number;
+  }): Promise<{
+    result: boolean;
+    albums: {
+      title: string;
+      id: string;
+      artworkUrl?: string;
+    }[];
+    hasNext: boolean;
+  }> {
+    const albums: {
+      title: string;
+      id: string;
+      artworkUrl?: string;
+    }[] = [];
+
+    const response = await MusicKit.getInstance().api.music(
+      `/v1/me/library/albums?limit=${options.limit}&offset=${options.offset}`,
+    );
+
+    response.data.data.map(album => {
+      albums.push({
+        title: album.attributes.name,
+        id: album.id,
+        artworkUrl: album.attributes.artwork?.url,
+      });
+    });
+
+    const hasNext =
+      response.data.meta.total !== options.offset + response.data.data.length;
+
+    return { result: true, albums, hasNext };
   }
 }
 
@@ -610,7 +646,8 @@ interface CapacitorAppleMusicPlugin {
   }): Promise<{
     result: boolean;
     album?: {
-      attributes: { title: string; id: string };
+      title: string;
+      id: string;
       tracks: {
         title: string;
         id: string;
@@ -618,6 +655,17 @@ interface CapacitorAppleMusicPlugin {
         trackNumber: string;
       }[];
     };
+  }>;
+  getLibraryAlbums(options: {
+    limit: number;
+    offset: number;
+  }): Promise<{
+    result: boolean;
+    albums: {
+      title: string;
+      id: string;
+      artworkUrl?: string;
+    }[];
   }>;
   play(): Promise<{ result: boolean }>;
   stop(): Promise<{ result: boolean }>;
