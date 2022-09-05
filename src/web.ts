@@ -508,8 +508,10 @@ export class CapacitorAppleMusicWeb
         : response.data.results['library-albums'];
 
       if (albums) {
-        resultAlbum = albums.data.find(
-          abm => abm.attributes.name === options.title,
+        resultAlbum = albums.data.find(abm =>
+          options.id
+            ? abm.id === options.id
+            : abm.attributes.name === options.title,
         );
         if (resultAlbum) {
           album = {
