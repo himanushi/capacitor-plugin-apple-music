@@ -504,32 +504,34 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
     }
 
     @objc func getLibraryAlbums(_ call: CAPPluginCall) {
+        let limit = call.getInt("limit") ?? 0
+        let offset = call.getInt("offset") ?? 0
+        var hasNext = false
+        var resultAlbums: [[String: String?]] = []
+
+        let query = MPMediaQuery.albums()
+        if let collections = query.collections {
+            let rangeEnd = collections.count > offset + limit ? offset + limit : collections.count
+            for collection in collections[offset..<rangeEnd] {
+                if let album = collection.representativeItem {
+                    let image = album.artwork?.image(at: CGSize(width: 100, height: 100))
+                    if let imageData = image?.jpegData(compressionQuality: 0.1) {
+                        resultAlbums.append([
+                            "title": album.albumTitle,
+                            "id": String(album.persistentID),
+                            "artworkUrl": imageData.base64EncodedString(),
+                        ])
+                    }
+                }
+            }
+            hasNext = collections.count != rangeEnd
+        }
+
         call.resolve([
             resultKey: true,
-            "hasNext": false,
-            "albums": [],
+            "hasNext": hasNext,
+            "albums": resultAlbums,
         ])
-        //        let query = MPMediaQuery.albums()
-        //        if let albums = query.items {
-        //            print(albums.count)
-        //            albums[0..<5].forEach {
-        //                if let artwork = $0.artwork {
-        //                    let image = artwork.image(at: CGSize(width: 300, height: 300))
-        //                    if let imageData = image?.jpegData(compressionQuality: 1.0) {
-        //                        print(imageData.base64EncodedString())
-        //                    }
-        //                }
-        //            }
-        //            let query2 = MPMediaQuery.albums()
-        //            if let collections = query2.collections {
-        //                for collection in collections {
-        //                    if let representativeTitle = collection.representativeItem!.albumTitle {
-        //                        print("'\(representativeTitle)',")
-        //                    }
-        //                }
-        //            }
-        //
-        //        }
     }
 
     @objc func getLibraryAlbum(_ call: CAPPluginCall) {
