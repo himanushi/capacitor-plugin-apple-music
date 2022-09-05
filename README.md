@@ -130,12 +130,12 @@ setSong(options: { songId: string; librarySongId?: string; previewUrl?: string; 
 ### getLibraryAlbum(...)
 
 ```typescript
-getLibraryAlbum(options: { albumTitle: string; }) => Promise<{ result: boolean; album?: { title: string; id: string; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }>
+getLibraryAlbum(options: { id?: string; title?: string; }) => Promise<{ result: boolean; album?: { title: string; id: string; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }>
 ```
 
-| Param         | Type                                 |
-| ------------- | ------------------------------------ |
-| **`options`** | <code>{ albumTitle: string; }</code> |
+| Param         | Type                                          |
+| ------------- | --------------------------------------------- |
+| **`options`** | <code>{ id?: string; title?: string; }</code> |
 
 **Returns:** <code>Promise&lt;{ result: boolean; album?: { title: string; id: string; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }&gt;</code>
 

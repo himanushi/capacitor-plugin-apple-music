@@ -442,7 +442,8 @@ export class CapacitorAppleMusicWeb
   }
 
   async getLibraryAlbum(options: {
-    albumTitle: string;
+    id?: string;
+    title?: string;
   }): Promise<{
     result: boolean;
     album?: {
@@ -479,9 +480,17 @@ export class CapacitorAppleMusicWeb
 
     let hasNext = false;
     let resultAlbum: MusicKit.APIResultData | undefined;
-    let fetchUrl = `/v1/me/library/search?types=library-albums&limit=25&term=${replaceName(
-      options.albumTitle,
-    )}`;
+    let fetchUrl = '';
+
+    if (options.title) {
+      fetchUrl = `/v1/me/library/search?types=library-albums&limit=25&term=${replaceName(
+        options.title,
+      )}`;
+    } else if (options.id) {
+      fetchUrl = `/v1/me/library/albums/${options.id}`;
+    } else {
+      return { result: false };
+    }
 
     // アルバム検索
     const limit = 10;
@@ -494,10 +503,13 @@ export class CapacitorAppleMusicWeb
       }
       hasNext = false;
       const response = await MusicKit.getInstance().api.music(fetchUrl);
-      const albums = response.data.results['library-albums'];
+      const albums = options.id
+        ? { data: response.data.data, next: false }
+        : response.data.results['library-albums'];
+
       if (albums) {
         resultAlbum = albums.data.find(
-          abm => abm.attributes.name === options.albumTitle,
+          abm => abm.attributes.name === options.title,
         );
         if (resultAlbum) {
           album = {
@@ -642,7 +654,8 @@ interface CapacitorAppleMusicPlugin {
     albumTitle?: string;
   }>;
   getLibraryAlbum(options: {
-    albumTitle: string;
+    id?: string;
+    title?: string;
   }): Promise<{
     result: boolean;
     album?: {
