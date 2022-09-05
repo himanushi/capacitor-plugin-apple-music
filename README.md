@@ -21,6 +21,7 @@ npx cap sync
 * [`unauthorize()`](#unauthorize)
 * [`setSong(...)`](#setsong)
 * [`getLibraryAlbum(...)`](#getlibraryalbum)
+* [`getLibraryAlbums(...)`](#getlibraryalbums)
 * [`play()`](#play)
 * [`stop()`](#stop)
 * [`pause()`](#pause)
@@ -129,14 +130,29 @@ setSong(options: { songId: string; librarySongId?: string; previewUrl?: string; 
 ### getLibraryAlbum(...)
 
 ```typescript
-getLibraryAlbum(options: { albumTitle: string; }) => Promise<{ result: boolean; album?: { attributes: { title: string; id: string; }; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }>
+getLibraryAlbum(options: { albumTitle: string; }) => Promise<{ result: boolean; album?: { title: string; id: string; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }>
 ```
 
 | Param         | Type                                 |
 | ------------- | ------------------------------------ |
 | **`options`** | <code>{ albumTitle: string; }</code> |
 
-**Returns:** <code>Promise&lt;{ result: boolean; album?: { attributes: { title: string; id: string; }; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }&gt;</code>
+**Returns:** <code>Promise&lt;{ result: boolean; album?: { title: string; id: string; tracks: { title: string; id: string; discNumber: string; trackNumber: string; }[]; }; }&gt;</code>
+
+--------------------
+
+
+### getLibraryAlbums(...)
+
+```typescript
+getLibraryAlbums(options: { limit: number; offset: number; }) => Promise<{ result: boolean; albums: { title: string; id: string; artworkUrl?: string; }[]; }>
+```
+
+| Param         | Type                                            |
+| ------------- | ----------------------------------------------- |
+| **`options`** | <code>{ limit: number; offset: number; }</code> |
+
+**Returns:** <code>Promise&lt;{ result: boolean; albums: { title: string; id: string; artworkUrl?: string; }[]; }&gt;</code>
 
 --------------------
 
