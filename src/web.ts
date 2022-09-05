@@ -552,14 +552,12 @@ export class CapacitorAppleMusicWeb
         const data = response.data;
         if (data) {
           for (const track of data.data) {
-            if (track.attributes.playParams.purchasedId) {
-              tracks.push({
-                title: track.attributes.name,
-                id: track.id,
-                discNumber: track.attributes.discNumber.toString(),
-                trackNumber: track.attributes.trackNumber.toString(),
-              });
-            }
+            tracks.push({
+              title: track.attributes.name,
+              id: track.id,
+              discNumber: track.attributes.discNumber.toString(),
+              trackNumber: track.attributes.trackNumber.toString(),
+            });
           }
           if (data.next) {
             hasNext = true;
