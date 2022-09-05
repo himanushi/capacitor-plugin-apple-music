@@ -666,6 +666,7 @@ interface CapacitorAppleMusicPlugin {
       id: string;
       artworkUrl?: string;
     }[];
+    hasNext: boolean;
   }>;
   play(): Promise<{ result: boolean }>;
   stop(): Promise<{ result: boolean }>;

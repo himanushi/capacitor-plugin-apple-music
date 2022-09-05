@@ -145,14 +145,14 @@ getLibraryAlbum(options: { albumTitle: string; }) => Promise<{ result: boolean; 
 ### getLibraryAlbums(...)
 
 ```typescript
-getLibraryAlbums(options: { limit: number; offset: number; }) => Promise<{ result: boolean; albums: { title: string; id: string; artworkUrl?: string; }[]; }>
+getLibraryAlbums(options: { limit: number; offset: number; }) => Promise<{ result: boolean; albums: { title: string; id: string; artworkUrl?: string; }[]; hasNext: boolean; }>
 ```
 
 | Param         | Type                                            |
 | ------------- | ----------------------------------------------- |
 | **`options`** | <code>{ limit: number; offset: number; }</code> |
 
-**Returns:** <code>Promise&lt;{ result: boolean; albums: { title: string; id: string; artworkUrl?: string; }[]; }&gt;</code>
+**Returns:** <code>Promise&lt;{ result: boolean; albums: { title: string; id: string; artworkUrl?: string; }[]; hasNext: boolean; }&gt;</code>
 
 --------------------
 
