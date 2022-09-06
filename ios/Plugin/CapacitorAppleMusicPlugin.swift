@@ -518,7 +518,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                     if let imageData = image?.jpegData(compressionQuality: 0.1) {
                         resultAlbums.append([
                             "title": album.albumTitle,
-                            "id": String(album.persistentID),
+                            "id": String(album.albumPersistentID),
                             "artworkUrl": imageData.base64EncodedString(),
                         ])
                     }
@@ -535,22 +535,32 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
     }
 
     @objc func getLibraryAlbum(_ call: CAPPluginCall) {
-        let albumTitle = call.getString("albumTitle") ?? ""
+        let title = call.getString("title")
+        let id = call.getString("id")
 
         Task {
             var result = false
             var reason = "開始"
             var resultAlbumId: String? = nil
             var resultTracks: [[String: String?]] = []
+            var albumTitle = title
 
             if MusicAuthorization.currentStatus == .authorized {
                 reason = reason + ",ログイン済み"
 
                 let query = MPMediaQuery.songs()
-                let albumTitleFilter = MPMediaPropertyPredicate(
-                    value: albumTitle,
-                    forProperty: MPMediaItemPropertyAlbumTitle,
-                    comparisonType: .equalTo)
+                var albumTitleFilter: MPMediaPropertyPredicate
+                if let albumId = id {
+                    albumTitleFilter = MPMediaPropertyPredicate(
+                        value: albumId,
+                        forProperty: MPMediaItemPropertyAlbumPersistentID,
+                        comparisonType: .equalTo)
+                } else {
+                    albumTitleFilter = MPMediaPropertyPredicate(
+                        value: title,
+                        forProperty: MPMediaItemPropertyAlbumTitle,
+                        comparisonType: .equalTo)
+                }
                 let filterPredicates: Set<MPMediaPredicate> = [
                     albumTitleFilter
                 ]
@@ -558,6 +568,7 @@ public class CapacitorAppleMusicPlugin: CAPPlugin {
                 if let tracks = query.items {
                     reason = reason + ",アルバムあり"
                     tracks.forEach {
+                        albumTitle = $0.albumTitle
                         resultAlbumId = String($0.albumPersistentID)
                         resultTracks.append([
                             "title": $0.title,
